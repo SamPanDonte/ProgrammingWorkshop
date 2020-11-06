@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+    <ol>
+        {% for user in user_list %}
+            <li>{{ user.id }},{{ user.login }}, {{ user.name }}, {{ user.surname }}, {{ user.password }}</li>
+        {% endfor %}
+    </ol>
+    {% if user_list.has_next %}
+        <a href="{{ user_list.next_page_number }}">Next</a>
+    {% endif %}
+    {% if user_list.has_previous %}
+        <a href="{{ user_list.previous_page_number }}">Prev</a>
+    {% endif %}
+{% endblock %}
