@@ -9,7 +9,6 @@ class Role(models.Model):
 
 class UserManager(BaseUserManager):
     """Class for managing users"""
-
     def create_user(self, login, name, surname, date_of_birth, password, role=None):  # TODO role
         """Create and save user to database"""
         user = self.model(
@@ -22,9 +21,6 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save()
         return user
-
-    def delete_user(self):
-        pass
 
 
 class User(AbstractBaseUser):

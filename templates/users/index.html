@@ -1,14 +1,44 @@
 {% extends 'base.html' %}
 {% block content %}
-    <ol>
-        {% for user in user_list %}
-            <li>{{ user.id }},{{ user.login }}, {{ user.name }}, {{ user.surname }}, {{ user.password }}</li>
-        {% endfor %}
-    </ol>
-    {% if user_list.has_next %}
-        <a href="{{ user_list.next_page_number }}">Next</a>
+    <div id="content">
+        <table>
+                <tr>
+                    <th>Id</th>
+                    <th>Login</th>
+                    <th>Name</th>
+                    <th>Surname</th>
+                    <th>Role</th>
+                    <th></th>
+                </tr>
+            {% for user in user_list %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.login }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.surname }}</td>
+                    <td>{{ user.role_id.role_name }}</td>
+                    <td>
+                        <form method="post" action="{% url 'users:detail' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="account" value="{{ user.login }}">
+                            <input type="submit" value="change">
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% if user_list.has_previous or user_list.has_next %}
+        <table>
+            <tr style="border: none">
+                {% if user_list.has_previous %}
+                    <td style="border: none"><a href="{{ user_list.previous_page_number }}">Last page</a></td>
+                {% endif %}
+                {% if user_list.has_next %}
+                    <td style="border: none"><a href="{{ user_list.next_page_number }}">Next page</a></td>
+                {% endif %}
+            </tr>
+        </table>
     {% endif %}
-    {% if user_list.has_previous %}
-        <a href="{{ user_list.previous_page_number }}">Prev</a>
-    {% endif %}
+    </div>
+
 {% endblock %}

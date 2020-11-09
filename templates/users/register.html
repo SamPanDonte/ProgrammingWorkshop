@@ -1,28 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register</title>
-</head>
-<body>
-    <form method="post" action="{% url 'users:add' %}">
+{% extends 'base.html' %}
+{% load static %}
+{% block link %}
+    <link rel="stylesheet" type="text/css" href="{% static 'users/login.css' %}">
+{% endblock %}
+{% block nav %}
+{% endblock %}
+{% block content %}
+    {% if error %}
+        <div style="position: absolute; left: 50%;">
+            <div id="error">{{ error }}</div>
+        </div>
+    {% endif %}
+    <div style="height: 150px"></div>
+    <form method="post" action="{% url 'users:register' %}">
     {% csrf_token %}
         <label>
-            <input type="text" placeholder="login" name="login">
-        </label>
+            <input type="text" placeholder="Login" name="login" required>
+        </label><br>
         <label>
-            <input type="password" placeholder="Password" name="password">
-        </label>
+            <input type="password" placeholder="Password" name="password" required>
+        </label><br>
         <label>
-            <input type="text" placeholder="Name" name="name">
-        </label>
+            <input type="text" placeholder="Name" name="name" required>
+        </label><br>
         <label>
-            <input type="text" placeholder="Surname" name="surname">
-        </label>
+            <input type="text" placeholder="Surname" name="surname" required>
+        </label><br>
         <label>
-            <input type="date" name="date_of_birth">
-        </label>
+            <input type="date" name="date_of_birth" required>
+        </label><br>
         <input type="submit" value="Register">
     </form>
-</body>
-</html>
+{% endblock %}
