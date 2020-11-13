@@ -6,29 +6,18 @@
 {% block nav %}
 {% endblock %}
 {% block content %}
-    {% if error %}
-        <div style="position: absolute; left: 50%;">
-            <div id="error">{{ error }}</div>
-        </div>
-    {% endif %}
     <div style="height: 150px"></div>
     <form method="post" action="{% url 'users:register' %}">
-    {% csrf_token %}
-        <label>
-            <input type="text" placeholder="Login" name="login" required>
-        </label><br>
-        <label>
-            <input type="password" placeholder="Password" name="password" required>
-        </label><br>
-        <label>
-            <input type="text" placeholder="Name" name="name" required>
-        </label><br>
-        <label>
-            <input type="text" placeholder="Surname" name="surname" required>
-        </label><br>
-        <label>
-            <input type="date" name="date_of_birth" required>
-        </label><br>
+        {% csrf_token %}
+        {% for message in messages %}
+            <div id="error">
+                {{ message }}
+            </div>
+        {% endfor %}
+        {{ form.errors }}
+        {% for field in form %}
+            {{ field }}<br>
+        {% endfor %}
         <input type="submit" value="Register">
     </form>
 {% endblock %}

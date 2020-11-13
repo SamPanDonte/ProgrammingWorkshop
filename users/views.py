@@ -1,70 +1,91 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
+from django.views import View
 
+from users.forms import LoginForm, RegisterForm, ChangeUserForm
 from users.models import User
 
 
-def index(request, page_num=1):
-    """User administration page"""
-    user: User = request.user
-    # User isn't logged in
-    if not user.is_authenticated:
-        return render(request, 'users/login.html')
-    # User is an administrator
-    if user.is_super_user():
+class IndexView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """View for user administration"""
+    login_url = 'users:login'
+    redirect_field_name = 'redirect'
+    change_form = ChangeUserForm
+    template = 'users/index.html'
+
+    def get(self, request, page_num=1):
+        """Render administration page"""
         user_pages = Paginator(User.objects.filter(is_deleted=False).order_by('id').all(), 20)
         page = user_pages.get_page(page_num)
         if not page:
             raise Http404("Page does not exists")
-        return render(request, 'users/index.html', {'user_list': page, 'user': user, 'title': 'Administration'})
-    # User is regular user
-    return HttpResponseRedirect(reverse('users:detail'))
+        return render(request, self.template, {'user_list': page, 'title': 'Administration'})
+
+    def test_func(self):
+        """Check if user is superuser"""
+        return self.request.user.is_super_user()
 
 
-def sign_in(request):
-    """Handling user signing in"""
-    user: User = request.user
-    # User has sign in earlier
-    if user.is_authenticated:
-        return HttpResponseRedirect(reverse('users:index'))
-    # User passed credentials
-    if request.method == 'POST':
-        try:
-            signed_in_user = authenticate(request, login=request.POST['login'], password=request.POST['password'])
-            if signed_in_user and signed_in_user.is_deleted:
-                signed_in_user = None
-        except KeyError:
-            return render(request, 'users/login.html', {'error': 'Unknown error try again.', 'title': 'Sign in'})
-        if signed_in_user:
-            login(request, signed_in_user)
+class SignInView(View):
+    """View for signing in"""
+    login_form = LoginForm
+    template = 'users/login.html'
+
+    def get(self, request):
+        """Render login view for user"""
+        if request.user.is_authenticated:
             return HttpResponseRedirect(reverse('users:index'))
-        else:
-            return render(request, 'users/login.html', {'error': 'Wrong login or password!', 'title': 'Sign in'})
-    # User need to pass credentials
-    return render(request, 'users/login.html', {'title': 'Sign in'})
+        context = {'title': 'Sign in', 'form': self.login_form(), 'redirect': request.GET.get('redirect')}
+        return render(request, self.template, context)
+
+    def post(self, request):
+        """Log user in or display errors"""
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('users:index'))
+        form = self.login_form(request.POST)
+        if form.is_valid():
+            user = authenticate(request, login=form.cleaned_data['login'], password=form.cleaned_data['password'])
+            if user:
+                login(request, user)
+                return HttpResponseRedirect(request.POST.get('redirect', default=reverse('users:detail')))
+            messages.error(request, 'username or password not correct')
+        return render(request, self.template, {'title': 'Sign in', 'form': form})
 
 
-def sign_up(request):
-    """Handling user signing up"""""
-    # User passed data
-    if request.method == 'POST':
-        try:
-            new_user = User.objects.create_user(request.POST['login'], request.POST['name'], request.POST['surname'],
-                                                request.POST['date_of_birth'], request.POST['password'])
-        except KeyError:
-            return render(request, 'users/register.html', {'error': 'Unknown error try again.', 'title': 'Sign up'})
-        except IntegrityError:
-            return render(request, 'users/register.html', {'error': 'Login occupied!', 'title': 'Sign up'})
-        if not new_user:
-            return render(request, 'users/register.html', {'error': 'Unknown error try again.', 'title': 'Sign up'})
-        login(request, new_user)
-        return HttpResponseRedirect(reverse('users:index'))
-    # User need to pass data
-    return render(request, 'users/register.html', {'title': 'Sign up'})
+class SignUpView(View):
+    """View for registering user"""
+    register_form = RegisterForm
+    template = 'users/register.html'
+
+    def get(self, request):
+        """Render register view for user"""
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('users:index'))
+        return render(request, self.template, {'title': 'Sign up', 'form': self.register_form()})
+
+    def post(self, request):
+        """Register user or display error"""
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('users:index'))
+        form = self.register_form(request.POST)
+        if form.is_valid():
+            try:
+                user = User.objects.create_user(form.cleaned_data['login'], form.cleaned_data['name'],
+                                                form.cleaned_data['surname'], form.cleaned_data['date_of_birth'],
+                                                form.cleaned_data['password'])
+            except IntegrityError:
+                messages.error(request, 'username occupied')
+                user = None
+            if user:
+                login(request, user)
+                return HttpResponseRedirect(reverse('users:index'))
+        return render(request, self.template, {'title': 'Sign up', 'form': form})
 
 
 def sign_out(request):

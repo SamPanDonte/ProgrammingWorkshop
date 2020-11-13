@@ -6,20 +6,20 @@
 {% block nav %}
 {% endblock %}
 {% block content %}
-    {% if error %}
-        <div style="position: absolute; left: 50%;">
-            <div id="error">{{ error }}</div>
-        </div>
-    {% endif %}
     <div style="height: 150px"></div>
     <form method="post" action="{% url 'users:login' %}">
         {% csrf_token %}
-        <label>
-            <input type="text" placeholder="Login" name="login" required>
-        </label><br>
-        <label>
-            <input type="password" placeholder="Password" name="password" required>
-        </label><br>
+        {% for message in messages %}
+            <div id="error">
+                {{ message }}
+            </div>
+        {% endfor %}
+        {{ form.errors }}
+        {{ form.login }}<br>
+        {{ form.password }}<br>
+        {% if redirect %}
+            <input type="hidden" name="redirect" value="{{ redirect }}">
+        {% endif %}
         <input type="submit" value="Sign in">
         <a href="{% url 'users:register' %}"><input type="button" value="Sign up"></a>
     </form>

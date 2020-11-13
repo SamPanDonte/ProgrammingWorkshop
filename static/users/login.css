@@ -21,10 +21,7 @@ input[type=submit], input[type=button] {
     padding: 7px;
 }
 #error {
-    position: relative;
-    left: -50%;
-    top: 10px;
-    padding: 5px;
+    padding: 2px;
     background: red;
     border: darkred solid 2px;
     border-radius: 5px;
