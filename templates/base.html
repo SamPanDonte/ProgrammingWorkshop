@@ -14,8 +14,9 @@
     <nav>
         <ol>
             {% if user.is_authenticated and user.is_super_user %}
-		    <li><a href="{% url 'users:index' 1 %}">Users</a></li>
-            {% elif user.is_authenticated %}
+		    <li><a href="{% url 'users:index' 1 %}">Administration</a></li>
+            {% endif %}
+            {% if user.is_authenticated %}
             <li><a href="{% url 'users:detail' %}">My account</a></li>
             {% endif %}
             {% if user.is_authenticated %}

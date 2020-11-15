@@ -1,31 +1,36 @@
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
-from django.db import IntegrityError
-from django.http import Http404, HttpResponseRedirect, HttpResponseForbidden
+from django.forms import modelformset_factory
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 
-from users.forms import LoginForm, RegisterForm, ChangeUserForm
-from users.models import User
+from users.forms import LoginForm, UserForm, AdminUserForm
+from users.models import User, Role
 
 
 class IndexView(LoginRequiredMixin, UserPassesTestMixin, View):
     """View for user administration"""
     login_url = 'users:login'
     redirect_field_name = 'redirect'
-    change_form = ChangeUserForm
+    change_form_set = modelformset_factory(User, form=AdminUserForm, extra=0)
     template = 'users/index.html'
 
     def get(self, request, page_num=1):
         """Render administration page"""
-        user_pages = Paginator(User.objects.filter(is_deleted=False).order_by('id').all(), 20)
+        user_pages = Paginator(User.objects.filter(is_deleted=False).order_by('id').all(), 15)
         page = user_pages.get_page(page_num)
-        if not page:
-            raise Http404("Page does not exists")
-        return render(request, self.template, {'user_list': page, 'title': 'Administration'})
+        form_set = self.change_form_set(queryset=page.object_list)
+        return render(request, self.template, {'user_list': page, 'title': 'Admin', 'form_set': form_set})
+
+    def post(self, request, page_num=1):
+        """Save changes"""
+        form_set = self.change_form_set(request.POST)
+        if form_set.is_valid():
+            form_set.save()
+        return self.get(request, page_num)
 
     def test_func(self):
         """Check if user is superuser"""
@@ -40,51 +45,45 @@ class SignInView(View):
     def get(self, request):
         """Render login view for user"""
         if request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('users:index'))
+            return HttpResponseRedirect(request.GET.get('redirect', default=reverse('users:detail')))
         context = {'title': 'Sign in', 'form': self.login_form(), 'redirect': request.GET.get('redirect')}
         return render(request, self.template, context)
 
     def post(self, request):
         """Log user in or display errors"""
         if request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('users:index'))
+            return HttpResponseRedirect(request.POST.get('redirect', default=reverse('users:detail')))
         form = self.login_form(request.POST)
         if form.is_valid():
-            user = authenticate(request, login=form.cleaned_data['login'], password=form.cleaned_data['password'])
-            if user:
-                login(request, user)
-                return HttpResponseRedirect(request.POST.get('redirect', default=reverse('users:detail')))
-            messages.error(request, 'username or password not correct')
+            user = form.cleaned_data['user']
+            login(request, user)
+            return HttpResponseRedirect(request.POST.get('redirect', default=reverse('users:detail')))
         return render(request, self.template, {'title': 'Sign in', 'form': form})
 
 
 class SignUpView(View):
     """View for registering user"""
-    register_form = RegisterForm
+    register_form = UserForm
     template = 'users/register.html'
 
     def get(self, request):
         """Render register view for user"""
         if request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('users:index'))
+            return HttpResponseRedirect(reverse('users:detail'))
         return render(request, self.template, {'title': 'Sign up', 'form': self.register_form()})
 
     def post(self, request):
         """Register user or display error"""
         if request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('users:index'))
+            return HttpResponseRedirect(reverse('users:detail'))
         form = self.register_form(request.POST)
         if form.is_valid():
-            try:
-                user = User.objects.create_user(form.cleaned_data['login'], form.cleaned_data['name'],
-                                                form.cleaned_data['surname'], form.cleaned_data['date_of_birth'],
-                                                form.cleaned_data['password'])
-            except IntegrityError:
-                messages.error(request, 'username occupied')
-                user = None
-            if user:
-                login(request, user)
-                return HttpResponseRedirect(reverse('users:index'))
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.role_id = Role.objects.get(pk=1)
+            user.save()
+            login(request, user)
+            return HttpResponseRedirect(reverse('users:detail'))
         return render(request, self.template, {'title': 'Sign up', 'form': form})
 
 
@@ -94,7 +93,21 @@ def sign_out(request):
     return HttpResponseRedirect(reverse('users:index'))
 
 
-def detail(request):
+class DetailView(LoginRequiredMixin, View):
+    """Class for viewing account detail"""
+    login_url = 'users:login'
+    redirect_field_name = 'redirect'
+    change_form = None
+    template = 'users/detail.html'
+
+    def get(self, request):
+        return render(request, self.template, {'title': 'Account', 'form': self.change_form()})
+
+    def post(self, request):
+        pass  # TODO
+
+
+def detail(request):  # TODO
     """User account detail info and making changes"""
     user: User = request.user
     # If user not logged in send him login page

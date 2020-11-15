@@ -9,14 +9,7 @@
     <div style="height: 150px"></div>
     <form method="post" action="{% url 'users:login' %}">
         {% csrf_token %}
-        {% for message in messages %}
-            <div id="error">
-                {{ message }}
-            </div>
-        {% endfor %}
-        {{ form.errors }}
-        {{ form.login }}<br>
-        {{ form.password }}<br>
+        {{ form.as_p }}
         {% if redirect %}
             <input type="hidden" name="redirect" value="{{ redirect }}">
         {% endif %}
