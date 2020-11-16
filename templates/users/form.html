@@ -3,13 +3,11 @@
 {% block link %}
     <link rel="stylesheet" type="text/css" href="{% static 'users/login.css' %}">
 {% endblock %}
-{% block nav %}
-{% endblock %}
 {% block content %}
     <div style="height: 150px"></div>
-    <form method="post" action="{% url 'users:register' %}">
+    <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <input type="submit" value="Register">
+        <input type="submit" value="Save" name="save">
     </form>
 {% endblock %}

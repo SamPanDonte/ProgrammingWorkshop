@@ -4,21 +4,11 @@
     <link rel="stylesheet" type="text/css" href="{% static 'users/login.css' %}">
 {% endblock %}
 {% block content %}
-    {% if error %}
-        <div style="position: absolute; left: 50%;">
-            <div id="error">{{ error }}</div>
-        </div>
-    {% endif %}
     <div style="height: 150px"></div>
     <form method="post">
         {% csrf_token %}
-        <label>Login: <input type="text" name="login" value="{{ user.login }}"></label><br>
-        <label>Password: <input type="password" name="password"></label><br>
-        <label>Name: <input type="text" name="name" value="{{ user.name }}"></label><br>
-        <label>Surname: <input type="text" name="surname" value="{{ user.surname }}"></label><br>
-        <label>Date of birth: <input type="date" name="date_of_birth" value="{{ user.date_of_birth }}"></label><br>
-        <input type="hidden" value="{{ user.id }}" name="id">
-        <input type="submit" value="Delete account" name="delete">
+        {{ form.as_p }}
         <input type="submit" value="Save" name="save">
+        <a href="{% url 'users:password' %}"><input type="button" value="Change password"></a>
     </form>
 {% endblock %}

@@ -5,24 +5,22 @@ from django.forms import TextInput, PasswordInput, ModelForm, Form, DateInput, C
 from users.models import User
 
 
-class AdminUserForm(ModelForm):
+class UserForm(ModelForm):
     """Form for administrating users"""
     class Meta:
         model = User
-        exclude = ('password', 'last_login')
+        fields = ('id', 'login', 'password', 'name', 'surname', 'date_of_birth', 'role_id', 'is_deleted')
+        exclude = ('password',)
+        labels = {
+            'is_deleted': 'Delete account'
+        }
         widgets = {
             'login': TextInput(attrs={'placeholder': 'Login'}),
             'password': PasswordInput(attrs={'placeholder': 'Password'}),
             'name': TextInput(attrs={'placeholder': 'Name'}),
             'surname': TextInput(attrs={'placeholder': 'Surname'}),
-            'date_of_birth': DateInput(attrs={'type': 'date'}, format='%Y-%m-%d')
+            'date_of_birth': DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
         }
-
-
-class UserForm(AdminUserForm):
-    """Form for registering and editing user"""
-    class Meta(AdminUserForm.Meta):
-        exclude = ('role_id', 'id', 'is_deleted', 'last_login')
 
 
 class LoginForm(Form):
@@ -34,7 +32,6 @@ class LoginForm(Form):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         login = cleaned_data.get('login')
-        print(login, password)
 
         if password and login:
             user = authenticate(login=login, password=password)

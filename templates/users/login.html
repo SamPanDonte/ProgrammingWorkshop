@@ -3,11 +3,9 @@
 {% block link %}
     <link rel="stylesheet" type="text/css" href="{% static 'users/login.css' %}">
 {% endblock %}
-{% block nav %}
-{% endblock %}
 {% block content %}
     <div style="height: 150px"></div>
-    <form method="post" action="{% url 'users:login' %}">
+    <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         {% if redirect %}

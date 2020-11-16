@@ -6,7 +6,6 @@
             {{ form_set.management_form }}
             <table>
                     <tr>
-                        <th>Id</th>
                         <th>Login</th>
                         <th>Name</th>
                         <th>Surname</th>
@@ -18,7 +17,6 @@
                 {% for form in form_set %}
                     {{ form.id }}
                     <tr>
-                        <td>{{ form.id.value }}</td>
                         <td>{{ form.login }}</td>
                         <td>{{ form.name }}</td>
                         <td>{{ form.surname }}</td>
