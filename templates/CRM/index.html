@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block link %}
+{% endblock %}
+{% block content %}
+    <div id="content">
+    <a href="{% url 'CRM:add' %}" style="margin: 5px; padding: 5px; background-color: green;">Add Company</a>
+    {% for company in companies %}
+            <div id="{{ company.id }}" style="background-color: lightblue; width: fit-content; padding: 10px; margin: 10px;display: inline-block;
+">          <a href="{% url 'CRM:detail' company.id %}">
+                Name: {{ company.name }}<br>
+                Nip: {{ company.nip }}<br>
+                Industry: {{ company.industry }}<br>
+                Address: {{ company.address }}<br>
+                City: {{ company.city }}<br>
+                Added by: {{ company.user }}<br>
+            </a>
+                <a href="{% url 'CRM:edit' company.id %}" style="margin: 5px; padding: 5px; background-color: green;">Edit</a>
+                <button onclick="del('{% url 'CRM:detail' company.id %}', '{{ company.id }}')" style="margin: 5px; padding: 5px; background-color: red;">Delete</button>
+            </div>
+    {% endfor %}
+    </div>
+    {% csrf_token %}
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+    function del(url, person) {
+        $.ajaxSetup({
+     beforeSend: function(xhr, settings) {
+         function getCookie(name) {
+             var cookieValue = null;
+             if (document.cookie && document.cookie != '') {
+                 var cookies = document.cookie.split(';');
+                 for (var i = 0; i < cookies.length; i++) {
+                     var cookie = jQuery.trim(cookies[i]);
+                     // Does this cookie string begin with the name we want?
+                     if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                         break;
+                     }
+                 }
+             }
+             return cookieValue;
+         }
+         if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+             // Only send the token to relative URLs i.e. locally.
+             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+         }
+     }
+});
+         $.ajax({
+                url: url,
+                type: 'DELETE',
+             data: {
+                    csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value,
+             },
+             success: function (data) {
+                 $('#' + person).remove()
+             }
+            });
+    }
+    </script>
+{% endblock %}

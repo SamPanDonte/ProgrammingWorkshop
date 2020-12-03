@@ -13,11 +13,13 @@
 {% block nav %}
     <nav>
         <ol>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'CRM:index' 1 %}">Main</a></li>
+            <li><a href="{% url 'CRM:search' %}">Search Person</a></li>
+            <li><a href="{% url 'users:detail' %}">My account</a></li>
+            {% endif %}
             {% if user.is_authenticated and user.is_super_user %}
 		    <li><a href="{% url 'users:index' 1 %}">Administration</a></li>
-            {% endif %}
-            {% if user.is_authenticated %}
-            <li><a href="{% url 'users:detail' %}">My account</a></li>
             {% endif %}
             {% if user.is_authenticated %}
 		    <li><a href="{% url 'users:logout' %}">Logout</a></li>
