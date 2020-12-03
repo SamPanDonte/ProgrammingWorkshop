@@ -26,3 +26,6 @@ class User(AbstractBaseUser):
 
     def is_super_user(self):
         return self.role_id.role_name == 'admin'
+
+    def is_moderator(self):
+        return self.role_id.role_name == 'moderator' or self.is_super_user()

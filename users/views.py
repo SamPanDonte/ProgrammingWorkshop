@@ -2,8 +2,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
-from django.forms import modelformset_factory, modelform_factory
-from django.http import HttpResponseRedirect
+from django.forms import modelform_factory
+from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
@@ -16,30 +16,17 @@ class IndexView(LoginRequiredMixin, UserPassesTestMixin, View):
     """View for user administration"""
     login_url = 'users:login'
     redirect_field_name = 'redirect'
-    change_form_set = modelformset_factory(User, form=UserForm, extra=0)
     template = 'users/index.html'
 
     def get(self, request, page_num=1):
         """Render administration page"""
         user_pages = Paginator(User.objects.filter(is_deleted=False).order_by('id').all(), 15)
         page = user_pages.get_page(page_num)
-        form_set = self.change_form_set(queryset=page.object_list)
-        return render(request, self.template, {'user_list': page, 'title': 'Admin', 'form_set': form_set})
-
-    def post(self, request, page_num=1):
-        """Save changes"""
-        form_set = self.change_form_set(request.POST)
-        if form_set.is_valid():
-            users = form_set.save()
-            if request.user in users:
-                if users[users.index(request.user)].is_deleted:
-                    logout(request)
-                    return HttpResponseRedirect(reverse('users:login'))
-        return self.get(request, page_num)
+        return render(request, self.template, {'user_list': page, 'title': 'Admin', 'page': page})
 
     def test_func(self):
         """Check if user is superuser"""
-        return self.request.user.is_super_user()
+        return self.request.user.is_moderator()
 
 
 class SignInView(View):
@@ -102,21 +89,46 @@ class DetailView(LoginRequiredMixin, View):
     """View account detail and change it"""
     login_url = 'users:login'
     redirect_field_name = 'redirect'
-    change_form = modelform_factory(User, form=UserForm, exclude=('password', 'role_id', 'id'))
+    change_form = modelform_factory(User, form=UserForm, exclude=('password', 'role_id', 'id', 'is_deleted'))
+    admin_change_form = modelform_factory(User, form=UserForm, exclude=('password', 'id', 'is_deleted'))
     template = 'users/detail.html'
 
-    def get(self, request):
-        return render(request, self.template, {'title': 'Account', 'form': self.change_form(instance=request.user)})
+    def get(self, request, user_id=None):
+        user = request.user
+        if user_id:
+            if not user.is_moderator():
+                return HttpResponseForbidden()
+            user = User.objects.get(pk=user_id)
+            if request.user.is_super_user():
+                return render(request, self.template, {'title': 'Account', 'form': self.admin_change_form(instance=user), 'user_id': user_id})
+        return render(request, self.template, {'title': 'Account', 'form': self.change_form(instance=user), 'user_id': user_id})
 
-    def post(self, request):
-        form = self.change_form(request.POST, instance=request.user)
-        if form.is_valid():
-            user = form.save()
-            if user.is_deleted:
-                logout(request)
+    def post(self, request, user_id=None):
+        user = request.user
+        if user_id:
+            if not user.is_moderator():
+                return HttpResponseForbidden()
+            user = User.objects.get(pk=user_id)
+            form = self.admin_change_form(request.POST, instance=user) if request.user.is_super_user() else self.change_form(request.POST, instance=user)
         else:
-            print(form.errors)
-        return self.get(request)
+            form = self.change_form(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+        else:
+            return render(request, self.template, {'title': 'Account', 'form': form, 'user_id': user_id})
+        if user_id:
+            return HttpResponseRedirect(reverse('users:index'))
+        return self.get(request, user_id)
+
+    def delete(self, request, user_id):
+        user = User.objects.get(pk=user_id)
+        user.is_deleted = True
+        if request.user.is_super_user() or request.user == user or (request.user.is_moderator() and not user.is_moderator()):
+            user.save()
+            if request.user == user:
+                logout(request)
+            return HttpResponse(status=200)
+        return HttpResponse(status=403)
 
 
 class PasswordChangeView(LoginRequiredMixin, View):
@@ -133,7 +145,7 @@ class PasswordChangeView(LoginRequiredMixin, View):
         form = self.change_form(data=request.POST, user=request.user)
         if form.is_valid():
             user = form.save(commit=False)
-            if request.user.is_super_user() or user == request.user:
+            if request.user.is_moderator() or user == request.user:
                 user.save()
                 login(request, user)
             return HttpResponseRedirect(reverse('users:detail'))
