@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views import View
 
 from CRM.forms import CompanyForm, NoteForm, ContactPersonForm
-from CRM.models import Company, Note, ContactPerson
+from CRM.models import Company, Note, ContactPerson, Industry
 
 
 class IndexView(LoginRequiredMixin, View):
@@ -17,10 +17,13 @@ class IndexView(LoginRequiredMixin, View):
 
     def get(self, request, page_num=1):
         """Render administration page"""
-        print(request.GET)
-        user_pages = Paginator(Company.objects.filter(is_deleted=False).order_by('id').all(), 30)
+        industry_filter = request.GET.get('filter', None)
+        companies = Company.objects.filter(is_deleted=False)
+        if industry_filter:
+            companies = companies.filter(industry__id=industry_filter)
+        user_pages = Paginator(companies.order_by('id').all(), 20)
         page = user_pages.get_page(page_num)
-        return render(request, self.template, {'companies': page, 'title': 'Company list'})
+        return render(request, self.template, {'companies': page, 'title': 'Company list', 'industries': Industry.objects.all()})
 
 
 class AddCompany(LoginRequiredMixin, View):
@@ -44,6 +47,7 @@ class AddCompany(LoginRequiredMixin, View):
             company = form.save(commit=False)
             company.user = request.user
             company.save()
+            company_id = company.id
             return HttpResponseRedirect(reverse('CRM:detail', args=(company_id,)))
         return render(request, self.template, {'title': 'Add Company', 'form': form})
 
@@ -145,6 +149,7 @@ class SearchPersonView(LoginRequiredMixin, View):
     template = 'CRM/search.html'
 
     def get(self, request):
-        people = ContactPerson.objects.filter(is_deleted=False)
-        people = people.filter(surname=request.GET['search']) if 'search' in request.GET else people
+        people = []
+        if 'search' in request.GET:
+            people = ContactPerson.objects.filter(is_deleted=False).filter(surname=request.GET['search'])
         return render(request, self.template, {'people': people})

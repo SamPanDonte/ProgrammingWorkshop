@@ -5,6 +5,14 @@
 {% block content %}
     <div id="content">
     <a href="{% url 'CRM:add' %}" style="margin: 5px; padding: 5px; background-color: green;">Add Company</a>
+        <select id="filter">
+            <option value>None</option>
+            {% for industry in industries %}
+                <option value="{{ industry.id }}">{{ industry.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button onclick="filter(document.getElementById('filter').value)">Filter</button><br>
     {% for company in companies %}
             <div id="{{ company.id }}" style="background-color: lightblue; width: fit-content; padding: 10px; margin: 10px;display: inline-block;
 ">          <a href="{% url 'CRM:detail' company.id %}">
@@ -19,6 +27,18 @@
                 <button onclick="del('{% url 'CRM:detail' company.id %}', '{{ company.id }}')" style="margin: 5px; padding: 5px; background-color: red;">Delete</button>
             </div>
     {% endfor %}
+    {% if companies.has_previous or companies.has_next %}
+        <table>
+            <tr style="border: none">
+                {% if companies.has_previous %}
+                    <td style="border: none"><a href="{{ companies.previous_page_number }}">Last page</a></td>
+                {% endif %}
+                {% if companies.has_next %}
+                    <td style="border: none"><a href="{{ companies.next_page_number }}">Next page</a></td>
+                {% endif %}
+            </tr>
+        </table>
+    {% endif %}
     </div>
     {% csrf_token %}
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -58,5 +78,12 @@
              }
             });
     }
+    function filter(arg) {
+        window.location.href = "?filter=" + arg;
+    }
+    $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            $("#filter").val(urlParams.get('filter'))
+        });
     </script>
 {% endblock %}

@@ -24,19 +24,18 @@
                     </tr>
                 {% endfor %}
             </table>
-    {% if user_list.has_previous or user_list.has_next %}
+    {% if page.has_previous or page.has_next %}
         <table>
             <tr style="border: none">
-                {% if user_list.has_previous %}
-                    <td style="border: none"><a href="{{ user_list.previous_page_number }}">Last page</a></td>
+                {% if page.has_previous %}
+                    <td style="border: none"><a href="{{ page.previous_page_number }}">Last page</a></td>
                 {% endif %}
-                {% if user_list.has_next %}
-                    <td style="border: none"><a href="{{ user_list.next_page_number }}">Next page</a></td>
+                {% if page.has_next %}
+                    <td style="border: none"><a href="{{ page.next_page_number }}">Next page</a></td>
                 {% endif %}
             </tr>
         </table>
     {% endif %}
-    {{ form }}
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
