@@ -69,3 +69,50 @@ footer {
 	position: fixed;
 	bottom: 0;
 }
+
+form {
+    margin: 0 auto 0;
+    background-color: grey;
+    width: fit-content;
+    border: solid black 3px;
+    padding: 10px;
+    border-radius: 15px;
+    text-align: center;
+    line-height: 40px;
+}
+input[type=password], input[type=text], input[type=date] {
+    border: lightgrey solid 2px;
+    font-size: 16px;
+    border-radius: 5px;
+    padding: 3px;
+    width: 300px;
+}
+input[type=submit], input[type=button] {
+    border-radius: 10px;
+    border: gray solid 1px;
+    padding: 7px;
+}
+
+.edit {
+	margin: 5px;
+	padding: 5px 10px 5px 10px;
+	background-color: green;
+}
+
+.delete {
+	margin: 5px;
+	padding: 5px 10px 5px 10px;
+	background-color: red;
+}
+
+.page-nav tr, .page-nav td {
+	border: none;
+}
+
+.widget {
+	background-color: lightblue;
+	width: fit-content;
+	padding: 10px;
+	margin: 10px;
+	display: inline-block;
+}

@@ -1,8 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
-{% block link %}
-    <link rel="stylesheet" type="text/css" href="{% static 'users/login.css' %}">
-{% endblock %}
+{% block title %}Sign in{% endblock %}
 {% block content %}
     <div style="height: 150px"></div>
     <form method="post">
@@ -12,6 +9,8 @@
             <input type="hidden" name="redirect" value="{{ redirect }}">
         {% endif %}
         <input type="submit" value="Sign in">
-        <a href="{% url 'users:register' %}"><input type="button" value="Sign up"></a>
+        <a href="{% url 'users:register' %}">
+            <input type="button" value="Sign up">
+        </a>
     </form>
 {% endblock %}

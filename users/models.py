@@ -24,8 +24,10 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = ['name', 'surname', 'date_of_birth', 'role_id']
     USERNAME_FIELD = 'login'
 
-    def is_super_user(self):
+    @property
+    def admin(self):
         return self.role_id.role_name == 'admin'
 
-    def is_moderator(self):
-        return self.role_id.role_name == 'moderator' or self.is_super_user()
+    @property
+    def moderator(self):
+        return self.role_id.role_name == 'moderator' or self.admin

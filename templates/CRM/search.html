@@ -1,32 +1,37 @@
 {% extends 'base.html' %}
-{% load static %}
-{% block link %}
-{% endblock %}
+{% block title %}Search Person{% endblock %}
 {% block content %}
     <div id="content">
-        <input type="text" id="search">
-        <button onclick="window.location.href = '?search=' + document.getElementById('search').value ">Search</button><br>
+        <label for="search">Search by surname: </label><input type="text" id="search">
+        <button onclick="search()">Search</button><br>
         {% if not people %}
             <h3>Nothing to show</h3>
-    {% endif %}
-    {% csrf_token %}
+        {% endif %}
+        {% csrf_token %}
         {% for person in people %}
-            <div id="person-{{ person.id }}" style="background-color: lightblue; width: fit-content; padding: 10px; margin: 10px;display: inline-block;">
+            <div id="person-{{ person.id }}" class="widget">
                 Author: {{ person.user }}<br>
                 {{ person }}<br>
                 Phone number: {{ person.phone }}<br>
                 Mail: {{ person.mail }}<br>
                 Company: {{ person.company.name }}<br>
-                <a href="{% url 'CRM:edit_person' person.company.id person.id %}" style="margin: 5px; padding: 5px; background-color: green;">Edit</a>
-                <button onclick="del('{% url 'CRM:edit_person' person.company.id person.id %}', 'person-{{ person.id }}')" style="margin: 5px; padding: 5px; background-color: red;">Delete</button>
+                <a href="{% url 'CRM:edit_person' person.company.id person.id %}" class="edit">Edit</a>
+                <button onclick="del('{% url 'CRM:edit_person' person.company.id person.id %}', '#person-{{ person.id }}')" class="delete">Delete</button>
             </div>
         {% endfor %}
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
     $(document).ready(function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            $("#search").val(urlParams.get('search'))
-        });
+        const urlParams = new URLSearchParams(window.location.search);
+        $("#search").val(urlParams.get('search'))
+    });
+    function search() {
+        const query = $('#search').val()
+        if (query !== '') {
+            $(location).attr('href', '?search=' + query)
+        } else {
+            $(location).attr('href', '?')
+        }
+    }
     </script>
 {% endblock %}

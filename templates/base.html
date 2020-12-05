@@ -3,37 +3,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ title }}</title>
+    <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
     <link rel="icon" href="{% static 'icon.png' %}">
-    {% block link %}
-    {% endblock %}
+    <script src="{% static 'jquery-3.5.1.js' %}"></script>
 </head>
 <body>
-{% block nav %}
     <nav>
         <ol>
             {% if user.is_authenticated %}
-            <li><a href="{% url 'CRM:index' 1 %}">Main</a></li>
-            <li><a href="{% url 'CRM:search' %}">Search Person</a></li>
-            <li><a href="{% url 'users:detail' %}">My account</a></li>
-            {% endif %}
-            {% if user.is_authenticated and user.is_super_user %}
-		    <li><a href="{% url 'users:index' 1 %}">Administration</a></li>
-            {% endif %}
-            {% if user.is_authenticated %}
-		    <li><a href="{% url 'users:logout' %}">Logout</a></li>
+                <li><a href="{% url 'CRM:index' 1 %}">Main</a></li>
+                <li><a href="{% url 'CRM:search' %}">Search Person</a></li>
+                <li><a href="{% url 'users:detail' %}">My account</a></li>
+                {% if user.moderator %}
+                    <li><a href="{% url 'users:index' 1 %}">Administration</a></li>
+                {% endif %}
+                <li><a href="{% url 'users:logout' %}">Logout</a></li>
             {% else %}
-		    <li><a href="{% url 'users:login' %}">Login</a></li>
+		        <li><a href="{% url 'users:login' %}">Login</a></li>
             {% endif %}
         </ol>
     </nav>
-{% endblock %}
-{% block content %}
-
-{% endblock %}
+{% block content %}{% endblock %}
 <footer>
-
+    Bartosz Wawrzyniak - Programming Workshop 2020
 </footer>
 </body>
 </html>

@@ -1,79 +1,53 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block title %}Administration{% endblock %}
 {% block content %}
     <div id="content">
-            {% csrf_token %}
-            <table>
-                    <tr>
-                        <th>Login</th>
-                        <th>Name</th>
-                        <th>Surname</th>
-                        <th>Date of birth</th>
-                        <th>Role</th>
-                        <th>Delete</th>
-                        <th></th>
-                    </tr>
-                {% for user in page %}
-                    <tr id="user-{{ user.id }}">
-                        <td>{{ user.login }}</td>
-                        <td>{{ user.name }}</td>
-                        <td>{{ user.surname }}</td>
-                        <td>{{ user.date_of_birth }}</td>
-                        <td>{{ user.role_id }}</td>
-                        <td><button onclick="del('{% url 'users:detail' user.id %}', 'user-{{ user.id }}')" style="margin: 5px; padding: 5px; background-color: red;">Delete</button></td>
-                        <td><a href="{% url 'users:detail' user.id %}" style="margin: 5px; padding: 5px; background-color: green;">Edit</a></td>
-                    </tr>
-                {% endfor %}
-            </table>
-    {% if page.has_previous or page.has_next %}
+        {% csrf_token %}
         <table>
-            <tr style="border: none">
-                {% if page.has_previous %}
-                    <td style="border: none"><a href="{{ page.previous_page_number }}">Last page</a></td>
+            <tr>
+                <th>Login</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Date of birth</th>
+                <th>Role</th>
+                <th>Delete</th>
+                <th>Edit</th>
+            </tr>
+            {% for user in user_list %}
+                <tr id="{{ user.id }}">
+                    <td>{{ user.login }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.surname }}</td>
+                    <td>{{ user.date_of_birth }}</td>
+                    <td>{{ user.role_id }}</td>
+                    <td>
+                        <button onclick="del('{% url 'users:detail' user.id %}', '#{{ user.id }}')" class="delete">
+                            Delete
+                        </button>
+                    </td>
+                    <td>
+                        <a href="{% url 'users:detail' user.id %}">
+                            <button class="edit">
+                                Edit
+                            </button>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% if user_list.has_previous or user_list.has_next %}
+        <table class="page-nav">
+            <tr>
+                {% if user_list.has_previous %}
+                    <td><a href="{{ user_list.previous_page_number }}">Last page</a></td>
                 {% endif %}
-                {% if page.has_next %}
-                    <td style="border: none"><a href="{{ page.next_page_number }}">Next page</a></td>
+                {% if user_list.has_next %}
+                    <td><a href="{{ user_list.next_page_number }}">Next page</a></td>
                 {% endif %}
             </tr>
         </table>
     {% endif %}
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script>
-    function del(url, person) {
-        $.ajaxSetup({
-     beforeSend: function(xhr, settings) {
-         function getCookie(name) {
-             var cookieValue = null;
-             if (document.cookie && document.cookie != '') {
-                 var cookies = document.cookie.split(';');
-                 for (var i = 0; i < cookies.length; i++) {
-                     var cookie = jQuery.trim(cookies[i]);
-                     // Does this cookie string begin with the name we want?
-                     if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                         break;
-                     }
-                 }
-             }
-             return cookieValue;
-         }
-         if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-             // Only send the token to relative URLs i.e. locally.
-             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-         }
-     }
-});
-         $.ajax({
-                url: url,
-                type: 'DELETE',
-             data: {
-                    csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value,
-             },
-             success: function (data) {
-                 $('#' + person).remove()
-             }
-            });
-    }
-    </script>
-
+    <script src="{% static 'main.js' %}"></script>
 {% endblock %}

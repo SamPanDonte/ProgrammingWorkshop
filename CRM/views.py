@@ -21,41 +21,90 @@ class IndexView(LoginRequiredMixin, View):
         companies = Company.objects.filter(is_deleted=False)
         if industry_filter:
             companies = companies.filter(industry__id=industry_filter)
-        user_pages = Paginator(companies.order_by('id').all(), 20)
-        page = user_pages.get_page(page_num)
-        return render(request, self.template, {'companies': page, 'title': 'Company list', 'industries': Industry.objects.all()})
+        company_pages = Paginator(companies.order_by('id'), 20)
+        company_list = company_pages.get_page(page_num)
+        return render(request, self.template, {'company_list': company_list, 'industry_list': Industry.objects.all()})
 
 
 class AddCompany(LoginRequiredMixin, View):
     """View for adding company"""
     login_url = 'users:login'
     redirect_field_name = 'redirect'
-    template = 'users/form.html'
+    template = 'form.html'
     form = CompanyForm
 
     def get(self, request, company_id=None):
         """Render add view for user"""
-        if company_id:
-            company = Company.objects.get(pk=company_id)
-            return render(request, self.template, {'title': 'Add Note', 'form': self.form(instance=company)})
-        return render(request, self.template, {'title': 'Add Company', 'form': self.form()})
+        form = self.form(instance=Company.objects.get(pk=company_id)) if company_id else self.form()
+        return render(request, self.template, {'title': 'Add Company', 'form': form})
 
     def post(self, request, company_id=None):
         """Add company or display error"""
-        form = self.form(request.POST, instance=Company.objects.get(pk=company_id)) if company_id else self.form(request.POST)
+        if company_id:
+            form = self.form(request.POST, instance=Company.objects.get(pk=company_id))
+        else:
+            form = self.form(request.POST)
         if form.is_valid():
             company = form.save(commit=False)
             company.user = request.user
             company.save()
-            company_id = company.id
-            return HttpResponseRedirect(reverse('CRM:detail', args=(company_id,)))
+            return HttpResponseRedirect(reverse('CRM:detail', args=[company.id]))
         return render(request, self.template, {'title': 'Add Company', 'form': form})
 
-    def delete(self, request, company_id):
+    @staticmethod
+    def delete(request, company_id):
         company = Company.objects.get(pk=company_id)
         company.is_deleted = True
         company.save()
         return HttpResponse(status=200)
+
+
+class AddModel(LoginRequiredMixin, View):
+    """View for adding and editing models connected to company"""
+    login_url = 'users:login'
+    redirect_field_name = 'redirect'
+    template = 'form.html'
+    form = None
+    model = None
+
+    def get(self, request, company_id, model_id=None):
+        """Render add or edit model view for user"""
+        form = self.form(instance=self.model.objects.get(pk=model_id)) if model_id else self.form()
+        return render(request, self.template, {'title': 'Add/Edit Model', 'form': form})
+
+    def post(self, request, company_id, model_id=None):
+        """Add or save model or display error"""
+        if model_id:
+            form = self.form(request.POST, instance=self.model.objects.get(pk=model_id))
+        else:
+            form = self.form(request.POST)
+        if form.is_valid():
+            model = form.save(commit=False)
+            if not model_id:
+                model.user = request.user
+                model.company = Company.objects.get(pk=company_id)
+            model.save()
+            return HttpResponseRedirect(reverse('CRM:detail', args=[company_id]))
+        return render(request, self.template, {'title': 'Add/Edit Model', 'form': form})
+
+    def delete(self, request, company_id, model_id):
+        """Delete model"""
+        model = self.model.objects.get(pk=model_id)
+        model.is_deleted = True
+        model.save()
+        return HttpResponse(status=200)
+
+
+class AddNoteView(AddModel):
+    """View for adding company note"""
+    form = NoteForm
+    model = Note
+
+
+class AddPersonView(AddModel):
+    """View for adding contact person"""
+    form = ContactPersonForm
+    model = ContactPerson
 
 
 class DetailView(LoginRequiredMixin, View):
@@ -68,78 +117,8 @@ class DetailView(LoginRequiredMixin, View):
         """Render detail view for user"""
         company = Company.objects.all().filter(is_deleted=False).get(pk=company_id)
         notes = Note.objects.all().filter(company=company).filter(is_deleted=False)
-        contact = ContactPerson.objects.all().filter(company=company).filter(is_deleted=False)
-        return render(request, self.template, {'title': 'Company Details', 'company': company, 'notes': notes, 'contact': contact})
-
-    def delete(self, request, company_id):
-        company = Company.objects.get(pk=company_id)
-        company.is_deleted = True
-        company.save()
-        return HttpResponse(status=200)
-
-
-class AddNoteView(LoginRequiredMixin, View):
-    """View for adding company note"""
-    login_url = 'users:login'
-    redirect_field_name = 'redirect'
-    template = 'users/form.html'
-    form = NoteForm
-
-    def get(self, request, company_id, note_id=None):
-        """Render add view for user"""
-        if note_id:
-            note = Note.objects.get(pk=note_id)
-            return render(request, self.template, {'title': 'Add Note', 'form': self.form(instance=note)})
-        return render(request, self.template, {'title': 'Add Note', 'form': self.form()})
-
-    def post(self, request, company_id, note_id=None):
-        """Add company or display error"""
-        form = self.form(request.POST, instance=Note.objects.get(pk=note_id)) if note_id else self.form(request.POST)
-        if form.is_valid():
-            note = form.save(commit=False)
-            note.user = request.user
-            note.company = Company.objects.get(pk=company_id)
-            note.save()
-            return HttpResponseRedirect(reverse('CRM:detail', args=[company_id]))
-        return render(request, self.template, {'title': 'Add Note', 'form': form})
-
-    def delete(self, request, company_id, note_id):
-        note = Note.objects.get(pk=note_id)
-        note.is_deleted = True
-        note.save()
-        return HttpResponse(status=200)
-
-
-class AddPersonView(LoginRequiredMixin, View):
-    """View for adding contact person"""
-    login_url = 'users:login'
-    redirect_field_name = 'redirect'
-    template = 'users/form.html'
-    form = ContactPersonForm
-
-    def get(self, request, company_id, person_id=None):
-        """Render add view for user"""
-        if person_id:
-            person = ContactPerson.objects.get(pk=person_id)
-            return render(request, self.template, {'title': 'Add Contact Person', 'form': self.form(instance=person)})
-        return render(request, self.template, {'title': 'Add Contact Person', 'form': self.form()})
-
-    def post(self, request, company_id, person_id=None):
-        """Add person or display error"""
-        form = self.form(request.POST, instance=ContactPerson.objects.get(pk=person_id)) if person_id else self.form(request.POST)
-        if form.is_valid():
-            person = form.save(commit=False)
-            person.user = request.user
-            person.company = Company.objects.get(pk=company_id)
-            person.save()
-            return HttpResponseRedirect(reverse('CRM:detail', args=[company_id]))
-        return render(request, self.template, {'title': 'Add Contact Person', 'form': form})
-
-    def delete(self, request, company_id, person_id):
-        person = ContactPerson.objects.get(pk=person_id)
-        person.is_deleted = True
-        person.save()
-        return HttpResponse(status=200)
+        contacts = ContactPerson.objects.all().filter(company=company).filter(is_deleted=False)
+        return render(request, self.template, {'company': company, 'notes': notes, 'contacts': contacts})
 
 
 class SearchPersonView(LoginRequiredMixin, View):
@@ -149,7 +128,6 @@ class SearchPersonView(LoginRequiredMixin, View):
     template = 'CRM/search.html'
 
     def get(self, request):
-        people = []
-        if 'search' in request.GET:
-            people = ContactPerson.objects.filter(is_deleted=False).filter(surname=request.GET['search'])
+        query = request.GET.get('search')
+        people = ContactPerson.objects.filter(is_deleted=False).filter(surname=query) if query else []
         return render(request, self.template, {'people': people})

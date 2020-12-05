@@ -1,60 +1,27 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block link %}
-    <link rel="stylesheet" type="text/css" href="{% static 'users/login.css' %}">
-{% endblock %}
+{% block title %}Account{% endblock %}
 {% block content %}
     <div style="height: 150px"></div>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <input type="submit" value="Save" name="save">
-        {% if not user_id %}
-        <a href="{% url 'users:password' %}"><input type="button" value="Change password"></a>
-            <button onclick="del('{% url 'users:detail' user.id %}')" style="margin: 5px; padding: 5px; background-color: red;">Delete</button>
-    {% endif %}
+        {% if not admin %}
+            <a href="{% url 'users:password' %}"><input type="button" value="Change password"></a>
+            <button value="{% url 'users:detail' user.id %}" class="delete">
+                Delete
+            </button>
+        {% endif %}
     </form>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="{% static 'main.js' %}"></script>
     <script>
-    $(document).ready(function() {
-            $("button").click(function(event) {
-                event.preventDefault();
-            });
+    $(document).ready(function () {
+        $('button').click(function (event) {
+            event.preventDefault();
+            del($(this).val());
+            $(location).attr('href', '{% url 'users:login' %}')
         });
-    function del(url) {
-        $.ajaxSetup({
-     beforeSend: function(xhr, settings) {
-         function getCookie(name) {
-             var cookieValue = null;
-             if (document.cookie && document.cookie != '') {
-                 var cookies = document.cookie.split(';');
-                 for (var i = 0; i < cookies.length; i++) {
-                     var cookie = jQuery.trim(cookies[i]);
-                     // Does this cookie string begin with the name we want?
-                     if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                         break;
-                     }
-                 }
-             }
-             return cookieValue;
-         }
-         if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-             // Only send the token to relative URLs i.e. locally.
-             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-         }
-     }
-});
-         $.ajax({
-                url: url,
-                type: 'DELETE',
-             data: {
-                    csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value,
-             },
-             success: function (data) {
-                 window.location.href = "{% url 'users:login' %}";
-             }
-            });
-    }
+    });
     </script>
 {% endblock %}
