@@ -12,6 +12,9 @@
             {% endfor %}
         </select>
         <button onclick="filter()">Filter</button><br>
+    {% if not company_list %}
+        <h3>Nothing to show</h3>
+    {% endif %}
     {% for company in company_list %}
         <div id="{{ company.id }}" class="widget">
             <a href="{% url 'CRM:detail' company.id %}">

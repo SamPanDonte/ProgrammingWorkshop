@@ -3,31 +3,33 @@
 {% block title %}Company Detail{% endblock %}
 {% block content %}
     <div id="content">
-        Name: {{ company.name }}<br>
+        <h1>{{ company.name }}</h1>
         Nip: {{ company.nip }}<br>
         Industry: {{ company.industry }}<br>
         Address: {{ company.address }}<br>
         City: {{ company.city }}<br>
         Added by: {{ company.user }}<br>
-        <h2>Contact People <a href="{% url 'CRM:add_person' company.id %}" class="edit">Add Contact Person</a></h2>
+        <h2>Contact People</h2>
+        <h4><a href="{% url 'CRM:add_person' company.id %}" class="edit">Add Contact Person</a></h4>
         {% for person in contacts %}
             <div id="person-{{ person.id }}" class="widget">
                 Added by: {{ person.user }}<br>
                 {{ person }}<br>
                 {{ person.phone }}<br>
                 {{ person.mail }}<br>
-                <a href="{% url 'CRM:edit_person' company.id person.id %}" class="edit">Edit</a>
+                <a href="{% url 'CRM:edit_person' company.id person.id %}"><button class="edit">Edit</button></a>
                 <button onclick="del('{% url 'CRM:edit_person' company.id person.id %}', '#person-{{ person.id }}')" class="delete">
                     Delete
                 </button>
             </div>
         {% endfor %}
-        <h2>Notes <a href="{% url 'CRM:add_note' company.id %}" class="edit">Add Note</a></h2>
+        <h2>Notes</h2>
+        <h4><a href="{% url 'CRM:add_note' company.id %}" class="edit">Add Note</a></h4>
         {% for note in notes %}
             <div id="note-{{ note.id }}" class="widget">
                 Added by: {{ note.user }}<br>
                 {{ note.content }}<br>
-                <a href="{% url 'CRM:edit_note' company.id note.id %}" class="edit">Edit</a>
+                <a href="{% url 'CRM:edit_note' company.id note.id %}" ><button class="edit">Edit</button></a>
                 <button onclick="del('{% url 'CRM:edit_note' company.id note.id %}', '#note-{{ note.id }}')" class="delete">
                     Delete
                 </button>

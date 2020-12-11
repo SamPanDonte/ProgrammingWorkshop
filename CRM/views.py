@@ -21,7 +21,7 @@ class IndexView(LoginRequiredMixin, View):
         companies = Company.objects.filter(is_deleted=False)
         if industry_filter:
             companies = companies.filter(industry__id=industry_filter)
-        company_pages = Paginator(companies.order_by('id'), 20)
+        company_pages = Paginator(companies.order_by('id'), 10)
         company_list = company_pages.get_page(page_num)
         return render(request, self.template, {'company_list': company_list, 'industry_list': Industry.objects.all()})
 

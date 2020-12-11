@@ -7,7 +7,12 @@ from users.models import User
 class AddUserTest(TestCase):
 
     def test_add_user(self):
-        user = User.objects.create_user('SamPanDonte', 'Bartosz', 'Wawrzyniak', timezone.now(), 'TestPassword')
-        self.assertAlmostEqual(User.objects.filter(login='SamPanDonte').first().name, user.name)
+        user = User()
+        user.name = 'Bartek'
+        user.surname = 'Wawrzyniak'
+        user.login = 'SamPanDonte'
+        user.date_of_birth = '2000-05-15'
+        user.save()
+        self.assertAlmostEqual(User.objects.get(login='SamPanDonte').name, user.name)
         self.assertIsNot(user.password, 'TestPassword')
         self.assertIsInstance(user, User)

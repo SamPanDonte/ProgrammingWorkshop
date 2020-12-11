@@ -20,7 +20,7 @@ class IndexView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def get(self, request, page_num=1):
         """Render administration page"""
-        user_pages = Paginator(User.objects.filter(is_deleted=False).order_by('id'), 20)
+        user_pages = Paginator(User.objects.filter(is_deleted=False).order_by('id'), 10)
         user_list = user_pages.get_page(page_num)
         return render(request, self.template, {'user_list': user_list})
 
@@ -70,7 +70,7 @@ class SignUpView(UserPassesTestMixin, View):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
-            user.role_id = Role.objects.get(pk=1)
+            user.role_id = Role.objects.get(pk=3)
             user.save()
             login(request, user)
             return HttpResponseRedirect(reverse('CRM:index'))
