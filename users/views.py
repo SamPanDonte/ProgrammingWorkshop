@@ -32,7 +32,7 @@ class IndexView(LoginRequiredMixin, UserPassesTestMixin, View):
 class SignInView(UserPassesTestMixin, View):
     """View for signing in"""
     login_form = LoginForm
-    template = 'login.html'
+    template = 'users/login.html'
 
     def get(self, request):
         """Render login view for user"""
